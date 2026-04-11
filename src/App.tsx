@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'motion/react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { motion, AnimatePresence, useScroll, useTransform } from 'motion/react';
 import { 
   Github, 
   Linkedin, 
@@ -31,32 +31,41 @@ import {
 import { Typewriter } from 'react-simple-typewriter';
 import { Section, FloatingItem } from './components/Layout';
 import { cn } from './lib/utils';
-import { IMAGES, SOCIAL_LINKS } from './constants';
+import { IMAGES, SOCIAL_LINKS, GITHUB_USERNAME, GITHUB_PORTFOLIO_TOPIC } from './constants';
 import { Scene3D } from './components/Scene3D';
 import Tilt from 'react-parallax-tilt';
-import { AssetsGallery } from './components/AssetsGallery';
+import { fetchPortfolioRepos, type Project } from './lib/github';
 
-const projects = [
+// Fallback enquanto o fetch do GitHub carrega (ou se nenhum repo tiver o tópico "portfolio")
+const fallbackProjects: Project[] = [
   {
-    title: "Sistemas SaaS & Automações",
-    description: "Desenvolvimento de arquiteturas SaaS escaláveis integrando n8n para fluxos de trabalho complexos e Typebot para interfaces conversacionais inteligentes.",
-    tech: ["n8n", "Typebot", "Node.js", "REST APIs"],
-    github: SOCIAL_LINKS.GITHUB,
-    type: "SaaS / Automation"
+    title: "ChefCost",
+    description: "Sistema inteligente de precificação para profissionais da gastronomia. Calcula custos, simula lucros e gerencia receitas com precisão usando IA.",
+    tech: ["React", "TypeScript", "Node.js", "PostgreSQL", "Gemini AI"],
+    github: "https://github.com/Ezequiel-o-Rodrigues/ChefCost",
+    type: "SaaS / AI"
   },
   {
-    title: "Gestaointeli-JRN",
-    description: "Sistema completo para gerenciamento de restaurantes com controle de vendas, estoque, comissões e relatórios analíticos. Arquitetura modular e interface responsiva.",
-    tech: ["PHP", "MySQL", "JavaScript", "Bootstrap"],
-    github: SOCIAL_LINKS.GITHUB,
+    title: "StudyMap",
+    description: "Plataforma de estudos orientada por IA que organiza conteúdos em trilhas e mapas inteligentes para otimizar o aprendizado.",
+    tech: ["React", "TypeScript", "Gemini AI"],
+    github: "https://github.com/Ezequiel-o-Rodrigues/StudyMap",
+    demo: "https://studymap-6yrq.onrender.com",
+    type: "EdTech / AI"
+  },
+  {
+    title: "Servidor Node.js Modular",
+    description: "Arquitetura backend modular e escalável com autenticação JWT, módulos auto-descobertos, métricas Prometheus e logging estruturado.",
+    tech: ["Node.js", "TypeScript", "PostgreSQL", "Redis", "Docker"],
+    github: "https://github.com/Ezequiel-o-Rodrigues/Servidor-Node.Js",
+    type: "Backend / Infra"
+  },
+  {
+    title: "GestaoInteli JNR",
+    description: "Sistema completo para restaurantes com PDV, controle de estoque, gestão de garçons e relatórios analíticos em uma única plataforma.",
+    tech: ["PHP", "MySQL", "Bootstrap", "Chart.js"],
+    github: "https://github.com/Ezequiel-o-Rodrigues/gestaointeli-jnr",
     type: "Full Stack"
-  },
-  {
-    title: "SIGA",
-    description: "Controle de Carga Horária com registro e gestão de horas trabalhadas, relatórios administrativos e foco em usabilidade e segurança.",
-    tech: ["PHP", "MySQL", "JavaScript"],
-    github: SOCIAL_LINKS.GITHUB,
-    type: "Web App"
   }
 ];
 
@@ -96,7 +105,6 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Portfolio />} />
-        <Route path="/assets" element={<AssetsGallery />} />
       </Routes>
     </BrowserRouter>
   );
@@ -105,7 +113,27 @@ export default function App() {
 function Portfolio() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [activeTab, setActiveTab] = useState('habilidades');
+  const [activeTab, setActiveTab] = useState('informacao');
+  const [projects, setProjects] = useState<Project[]>(fallbackProjects);
+  const [projectsSource, setProjectsSource] = useState<'fallback' | 'github'>('fallback');
+
+  useEffect(() => {
+    fetchPortfolioRepos(GITHUB_USERNAME, GITHUB_PORTFOLIO_TOPIC)
+      .then((fetched) => {
+        if (fetched.length > 0) {
+          setProjects(fetched);
+          setProjectsSource('github');
+        }
+      })
+      .catch((err) => console.warn('[github] fetch falhou:', err));
+  }, []);
+
+  // Scroll-linked morphing avatar: começa grande no hero, encolhe até virar o avatar da nav
+  const { scrollY } = useScroll();
+  const avatarTop = useTransform(scrollY, [0, 400], [120, 14]);
+  const avatarLeft = useTransform(scrollY, [0, 400], [40, 20]);
+  const avatarSize = useTransform(scrollY, [0, 400], [240, 56]);
+  const avatarHaloOpacity = useTransform(scrollY, [0, 400], [1, 0]);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -124,25 +152,67 @@ function Portfolio() {
   return (
     <div className="min-h-screen selection:bg-primary/30 overflow-x-hidden">
       <Scene3D />
+
+      {/* Morphing Avatar — começa grande no hero, encolhe pra nav conforme o scroll */}
+      <motion.div
+        style={{
+          position: 'fixed',
+          top: avatarTop,
+          left: avatarLeft,
+          width: avatarSize,
+          height: avatarSize,
+          zIndex: 60,
+        }}
+        className="pointer-events-none"
+      >
+        {/* Halo borrado no fundo (some conforme encolhe) */}
+        <motion.div
+          style={{ opacity: avatarHaloOpacity }}
+          className="absolute -inset-10 rounded-full bg-gradient-to-br from-primary/50 via-secondary/40 to-pink-500/30 blur-3xl"
+        />
+
+        {/* Anel cônico rotativo — o "frame" animado */}
+        <motion.div
+          className="absolute inset-0 rounded-full"
+          style={{
+            background: 'conic-gradient(from 0deg, #6366f1, #a855f7, #ec4899, #6366f1, #a855f7, #6366f1)',
+          }}
+          animate={{ rotate: 360 }}
+          transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+        />
+
+        {/* Anel secundário rotativo em direção contrária (sutil) */}
+        <motion.div
+          className="absolute inset-[2px] rounded-full opacity-60"
+          style={{
+            background: 'conic-gradient(from 180deg, transparent, #a855f7, transparent, #6366f1, transparent)',
+          }}
+          animate={{ rotate: -360 }}
+          transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
+        />
+
+        {/* Imagem interna com recuo pra revelar o anel */}
+        <div className="absolute inset-[5px] rounded-full overflow-hidden bg-bg-dark shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]">
+          <img
+            src={IMAGES.HERO_FLOATING_HEAD}
+            alt="Ezequiel Rodrigues"
+            className="w-full h-full object-cover"
+            referrerPolicy="no-referrer"
+          />
+        </div>
+      </motion.div>
+
       {/* Navigation */}
       <nav className={cn(
         "fixed top-0 w-full z-50 transition-all duration-500 px-6 py-4",
         scrolled ? "bg-bg-dark/80 backdrop-blur-xl border-b border-white/10 py-3" : "bg-transparent"
       )}>
         <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="text-2xl font-display font-black tracking-tighter flex items-center gap-2"
+            className="text-2xl font-display font-black tracking-tighter flex items-center gap-2 pl-20"
           >
-            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/50 glow-primary">
-              <img 
-                src={IMAGES.NAV_AVATAR} 
-                alt="Ezze" 
-                className="w-full h-full object-cover"
-                referrerPolicy="no-referrer"
-              />
-            </div>
             <span className="hidden sm:block uppercase tracking-widest">ezze<span className="text-primary">dev</span></span>
           </motion.div>
 
@@ -208,18 +278,6 @@ function Portfolio() {
           <Workflow size={120} strokeWidth={0.5} />
         </FloatingItem>
         
-        {/* Stylized Floating Head */}
-        <FloatingItem className="top-[45%] left-[12%] w-48 h-48 md:w-64 md:h-64 opacity-40 mix-blend-lighten z-0" delay={1.5}>
-          <Tilt tiltMaxAngleX={15} tiltMaxAngleY={15} perspective={1000} scale={1.05} transitionSpeed={2000}>
-            <img 
-              src={IMAGES.HERO_FLOATING_HEAD} 
-              alt="Stylized Avatar" 
-              className="w-full h-full object-contain filter drop-shadow-[0_0_30px_rgba(99,102,241,0.5)]"
-              referrerPolicy="no-referrer"
-            />
-          </Tilt>
-        </FloatingItem>
-
         <FloatingItem className="bottom-[25%] left-[10%] text-secondary/20" delay={3}>
           <Bot size={100} strokeWidth={0.5} />
         </FloatingItem>
@@ -293,11 +351,22 @@ function Portfolio() {
           <div className="relative group">
             <div className="absolute -inset-4 bg-gradient-to-r from-primary to-secondary rounded-[2.5rem] blur-2xl opacity-20 group-hover:opacity-40 transition-opacity" />
             <div className="relative aspect-[4/5] rounded-[2rem] overflow-hidden glass border-white/20">
-              <img 
-                src={IMAGES.ABOUT_PHOTO} 
-                alt="Ezequiel Rodrigues" 
-                className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700"
+              <img
+                src={IMAGES.ABOUT_PHOTO}
+                alt="Ezequiel Rodrigues"
+                className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
+                style={{ filter: 'grayscale(100%) contrast(1.1) brightness(1.05)' }}
                 referrerPolicy="no-referrer"
+              />
+              {/* Duotone overlay — tinge a foto em índigo→roxo (paleta do site) */}
+              <div
+                className="absolute inset-0 bg-gradient-to-br from-primary via-secondary to-bg-dark pointer-events-none"
+                style={{ mixBlendMode: 'color', opacity: 0.85 }}
+              />
+              {/* Realce luminoso — recupera um pouco de brilho por cima do duotone */}
+              <div
+                className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-primary/20 pointer-events-none"
+                style={{ mixBlendMode: 'screen' }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-bg-dark via-transparent to-transparent opacity-60" />
               <div className="absolute bottom-8 left-8 right-8">
@@ -340,20 +409,54 @@ function Portfolio() {
                     className="space-y-6"
                   >
                     <p className="text-white/70 text-lg leading-relaxed">
-                      Atualmente atuo em uma empresa de tecnologia focada no desenvolvimento de softwares <span className="text-white font-bold">SaaS</span>. Meu foco principal é a construção de sistemas inteligentes e escaláveis.
+                      Desenvolvedor apaixonado por transformar problemas reais em software. Minha jornada começou na <span className="text-white font-bold">manutenção de hardware</span> e evoluiu naturalmente para o desenvolvimento — hoje atuo 100% focado em construir sistemas <span className="text-white font-bold">SaaS</span> escaláveis e inteligentes.
                     </p>
                     <p className="text-white/70 text-lg leading-relaxed">
-                      Especialista em automações com <span className="text-primary font-bold">n8n</span>, interfaces conversacionais com <span className="text-secondary font-bold">Typebot</span> e integração de <span className="text-accent font-bold">Agentes de IA</span> para otimização de processos de negócio.
+                      Especialista em automações com <span className="text-primary font-bold">n8n</span>, interfaces conversacionais com <span className="text-secondary font-bold">Typebot</span> e integração de <span className="text-accent font-bold">Agentes de IA</span> para otimizar processos de negócio de ponta a ponta.
                     </p>
-                    <div className="grid grid-cols-2 gap-8 pt-6">
+                    <p className="text-white/70 text-lg leading-relaxed">
+                      Trabalho do backend à experiência final, acreditando em <span className="text-white font-bold">código limpo</span>, arquitetura modular e em entregar <span className="text-primary font-bold">valor</span> antes de entregar complexidade.
+                    </p>
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-8">
                       <div>
-                        <div className="text-xs font-display font-bold text-white/30 uppercase tracking-widest mb-2">Especialidade</div>
-                        <div className="text-lg font-bold">SaaS & Automation</div>
+                        <div className="text-[10px] font-display font-bold text-white/30 uppercase tracking-widest mb-2">Experiência</div>
+                        <div className="text-base font-bold">Desde 2023</div>
                       </div>
                       <div>
-                        <div className="text-xs font-display font-bold text-white/30 uppercase tracking-widest mb-2">Foco Atual</div>
-                        <div className="text-lg font-bold">AI Agents</div>
+                        <div className="text-[10px] font-display font-bold text-white/30 uppercase tracking-widest mb-2">Localização</div>
+                        <div className="text-base font-bold">Brasil</div>
                       </div>
+                      <div>
+                        <div className="text-[10px] font-display font-bold text-white/30 uppercase tracking-widest mb-2">Status</div>
+                        <div className="text-base font-bold text-green-400 flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                          Disponível
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-[10px] font-display font-bold text-white/30 uppercase tracking-widest mb-2">Foco Atual</div>
+                        <div className="text-base font-bold">SaaS & AI</div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-4 pt-8">
+                      <a
+                        href="#contact"
+                        className="px-8 py-4 bg-gradient-to-r from-primary to-secondary text-white rounded-2xl text-xs font-display font-bold uppercase tracking-widest transition-all hover:scale-105 hover:brightness-110 shadow-lg shadow-primary/30 flex items-center gap-2"
+                      >
+                        Vamos conversar
+                        <ChevronRight size={16} />
+                      </a>
+                      <a
+                        href={SOCIAL_LINKS.LINKEDIN}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-xs font-display font-bold uppercase tracking-widest transition-all flex items-center gap-2 backdrop-blur-md"
+                      >
+                        <Linkedin size={16} />
+                        LinkedIn
+                      </a>
                     </div>
                   </motion.div>
                 )}
@@ -399,6 +502,12 @@ function Portfolio() {
           <p className="text-white/40 max-w-2xl mx-auto font-display uppercase tracking-[0.2em] text-sm">
             Explorando as fronteiras do desenvolvimento de software e inteligência artificial.
           </p>
+          {projectsSource === 'github' && (
+            <div className="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-full border border-green-400/30 bg-green-400/5 text-green-400 text-[10px] font-display font-bold uppercase tracking-widest">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+              Sincronizado com GitHub
+            </div>
+          )}
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
@@ -435,16 +544,25 @@ function Portfolio() {
                     ))}
                   </div>
                   <div className="flex gap-4">
-                    <a 
+                    <a
                       href={project.github}
                       target="_blank"
+                      rel="noopener noreferrer"
                       className="flex-1 py-4 bg-white/5 hover:bg-primary rounded-2xl text-xs font-display font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2"
                     >
                       <Github size={16} /> Source
                     </a>
-                    <button className="w-14 h-14 glass hover:bg-secondary text-white rounded-2xl flex items-center justify-center transition-all">
-                      <ExternalLink size={20} />
-                    </button>
+                    {project.demo && (
+                      <a
+                        href={project.demo}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="Demo ao vivo"
+                        className="w-14 h-14 glass hover:bg-secondary text-white rounded-2xl flex items-center justify-center transition-all"
+                      >
+                        <ExternalLink size={20} />
+                      </a>
+                    )}
                   </div>
                 </div>
               </motion.div>
@@ -592,9 +710,6 @@ function Portfolio() {
             <a href={SOCIAL_LINKS.LINKEDIN} target="_blank" className="text-white/40 hover:text-primary transition-all"><Linkedin size={20} /></a>
             <a href={SOCIAL_LINKS.INSTAGRAM} target="_blank" className="text-white/40 hover:text-pink-500 transition-all"><Instagram size={20} /></a>
             <a href={SOCIAL_LINKS.GITHUB} target="_blank" className="text-white/40 hover:text-white transition-all"><Github size={20} /></a>
-            <Link to="/assets" className="text-white/40 hover:text-primary transition-all flex items-center gap-2 text-[10px] uppercase font-bold tracking-widest">
-              <Layers size={16} /> Gerenciar Assets
-            </Link>
           </div>
           <div className="flex justify-center flex-wrap gap-10">
             {navLinks.map(link => (
