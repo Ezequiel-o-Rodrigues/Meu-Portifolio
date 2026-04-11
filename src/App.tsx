@@ -46,7 +46,8 @@ const fallbackProjects: Project[] = [
     preview: "Sistema inteligente de precificação para profissionais da gastronomia. Calcula custos, simula lucros e gerencia receitas com precisão usando IA.",
     tech: ["React", "TypeScript", "Node.js", "PostgreSQL", "Gemini AI"],
     github: "https://github.com/Ezequiel-o-Rodrigues/ChefCost",
-    type: "SaaS / AI"
+    type: "SaaS / AI",
+    thumbnail: "https://opengraph.githubassets.com/1/Ezequiel-o-Rodrigues/ChefCost"
   },
   {
     title: "StudyMap",
@@ -55,7 +56,8 @@ const fallbackProjects: Project[] = [
     tech: ["React", "TypeScript", "Gemini AI"],
     github: "https://github.com/Ezequiel-o-Rodrigues/StudyMap",
     demo: "https://studymap-6yrq.onrender.com",
-    type: "EdTech / AI"
+    type: "EdTech / AI",
+    thumbnail: "https://opengraph.githubassets.com/1/Ezequiel-o-Rodrigues/StudyMap"
   },
   {
     title: "Servidor Node.js Modular",
@@ -63,7 +65,8 @@ const fallbackProjects: Project[] = [
     preview: "Arquitetura backend modular e escalável com autenticação JWT, módulos auto-descobertos, métricas Prometheus e logging estruturado.",
     tech: ["Node.js", "TypeScript", "PostgreSQL", "Redis", "Docker"],
     github: "https://github.com/Ezequiel-o-Rodrigues/Servidor-Node.Js",
-    type: "Backend / Infra"
+    type: "Backend / Infra",
+    thumbnail: "https://opengraph.githubassets.com/1/Ezequiel-o-Rodrigues/Servidor-Node.Js"
   },
   {
     title: "GestaoInteli JNR",
@@ -71,7 +74,8 @@ const fallbackProjects: Project[] = [
     preview: "Sistema completo para restaurantes com PDV, controle de estoque, gestão de garçons e relatórios analíticos em uma única plataforma.",
     tech: ["PHP", "MySQL", "Bootstrap", "Chart.js"],
     github: "https://github.com/Ezequiel-o-Rodrigues/gestaointeli-jnr",
-    type: "Full Stack"
+    type: "Full Stack",
+    thumbnail: "https://opengraph.githubassets.com/1/Ezequiel-o-Rodrigues/gestaointeli-jnr"
   }
 ];
 
@@ -525,11 +529,18 @@ function Portfolio() {
                 className="group relative glass rounded-[2rem] overflow-hidden border-white/5 h-full"
               >
                 <div className="aspect-video relative overflow-hidden">
-                  <img 
-                    src={IMAGES.PROJECT_THUMBNAIL(project.title)} 
+                  <img
+                    src={project.thumbnail}
                     alt={project.title}
-                    className="w-full h-full object-cover opacity-40 group-hover:opacity-80 transition-all duration-700 group-hover:scale-110"
+                    className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-all duration-700 group-hover:scale-110"
                     referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      const img = e.currentTarget;
+                      if (!img.dataset.fallback) {
+                        img.dataset.fallback = '1';
+                        img.src = `https://picsum.photos/seed/${encodeURIComponent(project.title)}/800/500`;
+                      }
+                    }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-bg-dark to-transparent" />
                   <div className="absolute top-6 right-6">
@@ -646,71 +657,49 @@ function Portfolio() {
         </div>
       </Section>
 
-      {/* Contact Section - Futuristic Form */}
+      {/* Contact Section */}
       <Section id="contact" className="py-32">
         <div className="relative glass rounded-[4rem] overflow-hidden border-white/10">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-secondary/10" />
-          <div className="relative grid lg:grid-cols-2">
-            <div className="p-16 lg:p-24">
-              <h2 className="text-5xl md:text-7xl font-display font-black mb-8 uppercase tracking-tighter leading-none">VAMOS <br /><span className="text-primary">CONECTAR?</span></h2>
-              <p className="text-white/40 text-lg mb-16 font-display uppercase tracking-widest">
-                Pronto para construir o próximo grande SaaS ou integrar IA ao seu negócio.
-              </p>
-              
-              <div className="space-y-10">
-                <a href={SOCIAL_LINKS.EMAIL} className="flex items-center gap-8 group">
-                  <div className="w-16 h-16 rounded-2xl glass flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all glow-primary">
-                    <Mail size={28} />
-                  </div>
-                  <div>
-                    <div className="text-xs font-display font-bold text-white/30 uppercase tracking-[0.3em] mb-1">E-mail</div>
-                    <div className="text-xl font-display font-bold uppercase tracking-tight">ezequielrod2020@gmail.com</div>
-                  </div>
-                </a>
-                <a href={SOCIAL_LINKS.WHATSAPP} className="flex items-center gap-8 group">
-                  <div className="w-16 h-16 rounded-2xl glass flex items-center justify-center text-secondary group-hover:bg-secondary group-hover:text-white transition-all">
-                    <Phone size={28} />
-                  </div>
-                  <div>
-                    <div className="text-xs font-display font-bold text-white/30 uppercase tracking-[0.3em] mb-1">WhatsApp</div>
-                    <div className="text-xl font-display font-bold uppercase tracking-tight">+55 (64) 99207-0004</div>
-                  </div>
-                </a>
-              </div>
+          <div className="relative p-12 md:p-16 lg:p-24 max-w-3xl mx-auto text-center">
+            <h2 className="text-5xl md:text-7xl font-display font-black mb-8 uppercase tracking-tighter leading-none">
+              VAMOS <br /><span className="text-primary">CONECTAR?</span>
+            </h2>
+            <p className="text-white/40 text-lg mb-16 font-display uppercase tracking-widest">
+              Pronto para construir o próximo grande SaaS ou integrar IA ao seu negócio.
+            </p>
 
-              <div className="flex gap-6 mt-20">
-                <a href={SOCIAL_LINKS.LINKEDIN} target="_blank" className="w-14 h-14 rounded-2xl glass flex items-center justify-center hover:bg-primary transition-all">
-                  <Linkedin size={24} />
-                </a>
-                <a href={SOCIAL_LINKS.INSTAGRAM} target="_blank" className="w-14 h-14 rounded-2xl glass flex items-center justify-center hover:bg-pink-600 transition-all">
-                  <Instagram size={24} />
-                </a>
-                <a href={SOCIAL_LINKS.GITHUB} target="_blank" className="w-14 h-14 rounded-2xl glass flex items-center justify-center hover:bg-secondary transition-all">
-                  <Github size={24} />
-                </a>
-              </div>
+            <div className="space-y-6 mb-16">
+              <a href={SOCIAL_LINKS.EMAIL} className="flex items-center gap-6 group p-4 rounded-2xl hover:bg-white/5 transition-all">
+                <div className="w-16 h-16 rounded-2xl glass flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all glow-primary shrink-0">
+                  <Mail size={28} />
+                </div>
+                <div className="text-left min-w-0">
+                  <div className="text-xs font-display font-bold text-white/30 uppercase tracking-[0.3em] mb-1">E-mail</div>
+                  <div className="text-lg md:text-xl font-display font-bold uppercase tracking-tight truncate">ezequielrod2020@gmail.com</div>
+                </div>
+              </a>
+              <a href={SOCIAL_LINKS.WHATSAPP} className="flex items-center gap-6 group p-4 rounded-2xl hover:bg-white/5 transition-all">
+                <div className="w-16 h-16 rounded-2xl glass flex items-center justify-center text-secondary group-hover:bg-secondary group-hover:text-white transition-all shrink-0">
+                  <Phone size={28} />
+                </div>
+                <div className="text-left">
+                  <div className="text-xs font-display font-bold text-white/30 uppercase tracking-[0.3em] mb-1">WhatsApp</div>
+                  <div className="text-lg md:text-xl font-display font-bold uppercase tracking-tight">+55 (64) 99207-0004</div>
+                </div>
+              </a>
             </div>
 
-            <div className="p-16 lg:p-24 bg-white/[0.02] backdrop-blur-md">
-              <form className="space-y-8" onSubmit={(e) => e.preventDefault()}>
-                <div className="grid sm:grid-cols-2 gap-8">
-                  <div className="space-y-3">
-                    <label className="text-xs font-display font-bold text-white/40 uppercase tracking-widest">Nome</label>
-                    <input type="text" className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-primary transition-all font-display uppercase text-sm tracking-widest" placeholder="Identificação" />
-                  </div>
-                  <div className="space-y-3">
-                    <label className="text-xs font-display font-bold text-white/40 uppercase tracking-widest">E-mail</label>
-                    <input type="email" className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-primary transition-all font-display uppercase text-sm tracking-widest" placeholder="Contato" />
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  <label className="text-xs font-display font-bold text-white/40 uppercase tracking-widest">Mensagem</label>
-                  <textarea rows={5} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:border-primary transition-all resize-none font-display uppercase text-sm tracking-widest" placeholder="Descreva sua visão..."></textarea>
-                </div>
-                <button className="w-full py-6 bg-gradient-to-r from-primary to-secondary text-white rounded-2xl font-display font-black uppercase tracking-[0.4em] transition-all hover:scale-[1.02] hover:brightness-110 shadow-2xl shadow-primary/30">
-                  Transmitir
-                </button>
-              </form>
+            <div className="flex justify-center gap-6">
+              <a href={SOCIAL_LINKS.LINKEDIN} target="_blank" rel="noopener noreferrer" className="w-14 h-14 rounded-2xl glass flex items-center justify-center hover:bg-primary transition-all">
+                <Linkedin size={24} />
+              </a>
+              <a href={SOCIAL_LINKS.INSTAGRAM} target="_blank" rel="noopener noreferrer" className="w-14 h-14 rounded-2xl glass flex items-center justify-center hover:bg-pink-600 transition-all">
+                <Instagram size={24} />
+              </a>
+              <a href={SOCIAL_LINKS.GITHUB} target="_blank" rel="noopener noreferrer" className="w-14 h-14 rounded-2xl glass flex items-center justify-center hover:bg-secondary transition-all">
+                <Github size={24} />
+              </a>
             </div>
           </div>
         </div>

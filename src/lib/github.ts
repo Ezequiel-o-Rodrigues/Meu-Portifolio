@@ -2,6 +2,7 @@ export interface Project {
   title: string;
   description: string;
   preview: string;
+  thumbnail: string;
   readme?: string;
   readmeBase?: string;
   tech: string[];
@@ -67,6 +68,46 @@ function extractPreview(md: string | undefined, fallback: string): string {
   return stripped.length > 220 ? stripped.slice(0, 220).trim() + '…' : stripped;
 }
 
+// Extrai a primeira imagem "grande" do README, ignorando shields/badges.
+function extractFirstImage(
+  md: string | undefined,
+  readmeBase: string,
+): string | undefined {
+  if (!md) return undefined;
+
+  const candidates: string[] = [];
+
+  // Markdown: ![alt](url)
+  const mdRegex = /!\[[^\]]*\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g;
+  let m: RegExpExecArray | null;
+  while ((m = mdRegex.exec(md)) !== null) candidates.push(m[1]);
+
+  // HTML: <img src="url">
+  const htmlRegex = /<img[^>]+src=["']([^"']+)["']/gi;
+  while ((m = htmlRegex.exec(md)) !== null) candidates.push(m[1]);
+
+  const isBadge = (url: string) => {
+    const lower = url.toLowerCase();
+    return (
+      lower.includes('shields.io') ||
+      lower.includes('badge') ||
+      lower.includes('/badges/') ||
+      lower.includes('img.shields') ||
+      lower.includes('codecov.io') ||
+      lower.includes('travis-ci') ||
+      lower.includes('circleci') ||
+      lower.endsWith('.svg')
+    );
+  };
+
+  const firstValid = candidates.find((url) => !isBadge(url));
+  if (!firstValid) return undefined;
+
+  // Resolve URL relativa → raw.githubusercontent
+  if (/^https?:/.test(firstValid)) return firstValid;
+  return readmeBase + firstValid.replace(/^\.?\//, '');
+}
+
 export async function fetchPortfolioRepos(
   username: string,
   topic: string,
@@ -109,12 +150,17 @@ export async function fetchPortfolioRepos(
 
   const projects: Project[] = filtered.map((r, i) => {
     const fallbackDesc = r.description ?? 'Projeto sem descrição no GitHub.';
+    const readmeBase = `https://raw.githubusercontent.com/${username}/${r.name}/${r.default_branch}/`;
+    const readmeImage = extractFirstImage(readmes[i], readmeBase);
+    const socialPreview = `https://opengraph.githubassets.com/1/${username}/${r.name}`;
+
     return {
       title: prettifyName(r.name),
       description: fallbackDesc,
       preview: extractPreview(readmes[i], fallbackDesc),
+      thumbnail: readmeImage ?? socialPreview,
       readme: readmes[i],
-      readmeBase: `https://raw.githubusercontent.com/${username}/${r.name}/${r.default_branch}/`,
+      readmeBase,
       tech: buildTechList(r, topic),
       github: r.html_url,
       demo: r.homepage?.trim() || undefined,
