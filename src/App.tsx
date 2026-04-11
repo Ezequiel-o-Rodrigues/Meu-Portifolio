@@ -35,19 +35,23 @@ import { IMAGES, SOCIAL_LINKS, GITHUB_USERNAME, GITHUB_PORTFOLIO_TOPIC } from '.
 import { Scene3D } from './components/Scene3D';
 import Tilt from 'react-parallax-tilt';
 import { fetchPortfolioRepos, type Project } from './lib/github';
+import { ReadmeModal } from './components/ReadmeModal';
+import { BookOpen } from 'lucide-react';
 
 // Fallback enquanto o fetch do GitHub carrega (ou se nenhum repo tiver o tópico "portfolio")
 const fallbackProjects: Project[] = [
   {
     title: "ChefCost",
-    description: "Sistema inteligente de precificação para profissionais da gastronomia. Calcula custos, simula lucros e gerencia receitas com precisão usando IA.",
+    description: "Sistema inteligente de precificação para profissionais da gastronomia.",
+    preview: "Sistema inteligente de precificação para profissionais da gastronomia. Calcula custos, simula lucros e gerencia receitas com precisão usando IA.",
     tech: ["React", "TypeScript", "Node.js", "PostgreSQL", "Gemini AI"],
     github: "https://github.com/Ezequiel-o-Rodrigues/ChefCost",
     type: "SaaS / AI"
   },
   {
     title: "StudyMap",
-    description: "Plataforma de estudos orientada por IA que organiza conteúdos em trilhas e mapas inteligentes para otimizar o aprendizado.",
+    description: "Plataforma de estudos orientada por IA.",
+    preview: "Plataforma de estudos orientada por IA que organiza conteúdos em trilhas e mapas inteligentes para otimizar o aprendizado.",
     tech: ["React", "TypeScript", "Gemini AI"],
     github: "https://github.com/Ezequiel-o-Rodrigues/StudyMap",
     demo: "https://studymap-6yrq.onrender.com",
@@ -55,14 +59,16 @@ const fallbackProjects: Project[] = [
   },
   {
     title: "Servidor Node.js Modular",
-    description: "Arquitetura backend modular e escalável com autenticação JWT, módulos auto-descobertos, métricas Prometheus e logging estruturado.",
+    description: "Arquitetura backend modular e escalável.",
+    preview: "Arquitetura backend modular e escalável com autenticação JWT, módulos auto-descobertos, métricas Prometheus e logging estruturado.",
     tech: ["Node.js", "TypeScript", "PostgreSQL", "Redis", "Docker"],
     github: "https://github.com/Ezequiel-o-Rodrigues/Servidor-Node.Js",
     type: "Backend / Infra"
   },
   {
     title: "GestaoInteli JNR",
-    description: "Sistema completo para restaurantes com PDV, controle de estoque, gestão de garçons e relatórios analíticos em uma única plataforma.",
+    description: "Sistema completo para restaurantes.",
+    preview: "Sistema completo para restaurantes com PDV, controle de estoque, gestão de garçons e relatórios analíticos em uma única plataforma.",
     tech: ["PHP", "MySQL", "Bootstrap", "Chart.js"],
     github: "https://github.com/Ezequiel-o-Rodrigues/gestaointeli-jnr",
     type: "Full Stack"
@@ -116,6 +122,7 @@ function Portfolio() {
   const [activeTab, setActiveTab] = useState('informacao');
   const [projects, setProjects] = useState<Project[]>(fallbackProjects);
   const [projectsSource, setProjectsSource] = useState<'fallback' | 'github'>('fallback');
+  const [openReadme, setOpenReadme] = useState<Project | null>(null);
 
   useEffect(() => {
     fetchPortfolioRepos(GITHUB_USERNAME, GITHUB_PORTFOLIO_TOPIC)
@@ -533,9 +540,20 @@ function Portfolio() {
                 </div>
                 <div className="p-10">
                   <h3 className="text-2xl font-display font-black mb-4 uppercase tracking-tight group-hover:text-primary transition-colors">{project.title}</h3>
-                  <p className="text-white/50 text-sm leading-relaxed mb-8">
-                    {project.description}
-                  </p>
+                  <div className="relative mb-8">
+                    <p className="text-white/50 text-sm leading-relaxed line-clamp-4">
+                      {project.preview}
+                    </p>
+                    {project.readme && (
+                      <button
+                        onClick={() => setOpenReadme(project)}
+                        className="mt-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 inline-flex items-center gap-2 text-[10px] font-display font-bold uppercase tracking-widest text-primary hover:text-white"
+                      >
+                        <BookOpen size={14} />
+                        Ler README completo
+                      </button>
+                    )}
+                  </div>
                   <div className="flex flex-wrap gap-2 mb-8">
                     {project.tech.map(t => (
                       <span key={t} className="text-[10px] font-display font-bold px-3 py-1 bg-white/5 text-white/60 rounded-lg border border-white/10">
@@ -720,6 +738,9 @@ function Portfolio() {
           </div>
         </div>
       </footer>
+
+      {/* README Modal — aberto ao clicar em "Ler README completo" */}
+      <ReadmeModal project={openReadme} onClose={() => setOpenReadme(null)} />
     </div>
   );
 }

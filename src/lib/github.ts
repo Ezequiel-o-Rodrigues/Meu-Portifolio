@@ -1,6 +1,9 @@
 export interface Project {
   title: string;
   description: string;
+  preview: string;
+  readme?: string;
+  readmeBase?: string;
   tech: string[];
   github: string;
   demo?: string;
@@ -18,10 +21,51 @@ interface GitHubRepo {
   stargazers_count: number;
   fork: boolean;
   pushed_at: string;
+  default_branch: string;
 }
 
-const CACHE_KEY = 'ezzedev-gh-portfolio-v1';
+const CACHE_KEY = 'ezzedev-gh-portfolio-v2';
 const CACHE_TTL_MS = 60 * 60 * 1000;
+
+async function fetchReadme(
+  username: string,
+  repoName: string,
+): Promise<string | undefined> {
+  try {
+    const res = await fetch(
+      `https://api.github.com/repos/${username}/${repoName}/readme`,
+      { headers: { Accept: 'application/vnd.github.v3.raw' } },
+    );
+    if (!res.ok) return undefined;
+    return await res.text();
+  } catch {
+    return undefined;
+  }
+}
+
+function stripMarkdown(md: string): string {
+  return md
+    .replace(/^---[\s\S]*?---/m, '')
+    .replace(/```[\s\S]*?```/g, '')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/<[^>]+>/g, '')
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/[*_~>]/g, '')
+    .replace(/^\s*[-*+]\s+/gm, '')
+    .replace(/\|/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function extractPreview(md: string | undefined, fallback: string): string {
+  if (!md) return fallback;
+  const stripped = stripMarkdown(md);
+  if (stripped.length < 40) return fallback;
+  return stripped.length > 220 ? stripped.slice(0, 220).trim() + '…' : stripped;
+}
 
 export async function fetchPortfolioRepos(
   username: string,
@@ -50,23 +94,34 @@ export async function fetchPortfolioRepos(
 
   const repos: GitHubRepo[] = await res.json();
 
-  const projects = repos
+  const filtered = repos
     .filter((r) => !r.fork && r.topics.includes(topic))
     .sort(
       (a, b) =>
         b.stargazers_count - a.stargazers_count ||
         b.pushed_at.localeCompare(a.pushed_at),
     )
-    .slice(0, 6)
-    .map<Project>((r) => ({
+    .slice(0, 6);
+
+  const readmes = await Promise.all(
+    filtered.map((r) => fetchReadme(username, r.name)),
+  );
+
+  const projects: Project[] = filtered.map((r, i) => {
+    const fallbackDesc = r.description ?? 'Projeto sem descrição no GitHub.';
+    return {
       title: prettifyName(r.name),
-      description: r.description ?? 'Projeto sem descrição no GitHub.',
+      description: fallbackDesc,
+      preview: extractPreview(readmes[i], fallbackDesc),
+      readme: readmes[i],
+      readmeBase: `https://raw.githubusercontent.com/${username}/${r.name}/${r.default_branch}/`,
       tech: buildTechList(r, topic),
       github: r.html_url,
       demo: r.homepage?.trim() || undefined,
       type: inferType(r),
       stars: r.stargazers_count,
-    }));
+    };
+  });
 
   try {
     localStorage.setItem(
