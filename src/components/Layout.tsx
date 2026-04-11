@@ -16,7 +16,7 @@ export const Section = ({ children, className, id }: SectionProps) => {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.6 }}
-      className={cn("relative z-10 py-20 px-6 max-w-7xl mx-auto", className)}
+      className={cn("relative z-10 py-16 md:py-20 px-4 sm:px-6 max-w-7xl mx-auto", className)}
     >
       {children}
     </motion.section>

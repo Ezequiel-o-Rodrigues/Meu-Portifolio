@@ -33,7 +33,7 @@ export const ReadmeModal: React.FC<Props> = ({ project, onClose }) => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 bg-black/80 backdrop-blur-md"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 md:p-8 bg-black/80 backdrop-blur-md"
           onClick={onClose}
         >
           <motion.div
@@ -45,10 +45,10 @@ export const ReadmeModal: React.FC<Props> = ({ project, onClose }) => {
             className="relative w-full max-w-4xl max-h-[90vh] bg-[#0d1117] border border-white/10 rounded-2xl overflow-hidden shadow-2xl shadow-primary/20 flex flex-col"
           >
             {/* Header */}
-            <div className="flex items-center justify-between gap-4 px-6 py-4 border-b border-white/10 bg-[#161b22] shrink-0">
-              <div className="flex items-center gap-3 min-w-0">
-                <Github size={20} className="text-white/60 shrink-0" />
-                <h2 className="text-lg font-display font-bold text-white uppercase tracking-wider truncate">
+            <div className="flex items-center justify-between gap-2 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 border-b border-white/10 bg-[#161b22] shrink-0">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                <Github size={18} className="text-white/60 shrink-0" />
+                <h2 className="text-sm sm:text-lg font-display font-bold text-white uppercase tracking-wider truncate">
                   {project.title}
                 </h2>
                 {project.stars !== undefined && project.stars > 0 && (
@@ -76,7 +76,7 @@ export const ReadmeModal: React.FC<Props> = ({ project, onClose }) => {
             </div>
 
             {/* README content */}
-            <div className="flex-1 overflow-y-auto px-8 py-10 markdown-body">
+            <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 sm:py-10 markdown-body">
               {project.readme ? (
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}

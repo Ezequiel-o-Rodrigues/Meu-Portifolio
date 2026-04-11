@@ -139,11 +139,22 @@ function Portfolio() {
       .catch((err) => console.warn('[github] fetch falhou:', err));
   }, []);
 
+  // Detecta mobile para desativar a transição de morph (em telas pequenas o avatar
+  // começa já no tamanho final, encostado no canto superior esquerdo)
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)');
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
+
   // Scroll-linked morphing avatar: começa grande no hero, encolhe até virar o avatar da nav
   const { scrollY } = useScroll();
-  const avatarTop = useTransform(scrollY, [0, 400], [120, 14]);
-  const avatarLeft = useTransform(scrollY, [0, 400], [40, 20]);
-  const avatarSize = useTransform(scrollY, [0, 400], [240, 56]);
+  const avatarTop = useTransform(scrollY, [0, 400], [110, 14]);
+  const avatarLeft = useTransform(scrollY, [0, 400], [32, 20]);
+  const avatarSize = useTransform(scrollY, [0, 400], [320, 56]);
   const avatarHaloOpacity = useTransform(scrollY, [0, 400], [1, 0]);
 
   useEffect(() => {
@@ -164,23 +175,25 @@ function Portfolio() {
     <div className="min-h-screen selection:bg-primary/30 overflow-x-hidden">
       <Scene3D />
 
-      {/* Morphing Avatar — começa grande no hero, encolhe pra nav conforme o scroll */}
+      {/* Morphing Avatar — em desktop faz transição de scroll; em mobile já nasce no tamanho final */}
       <motion.div
         style={{
           position: 'fixed',
-          top: avatarTop,
-          left: avatarLeft,
-          width: avatarSize,
-          height: avatarSize,
+          top: isMobile ? 14 : avatarTop,
+          left: isMobile ? 20 : avatarLeft,
+          width: isMobile ? 56 : avatarSize,
+          height: isMobile ? 56 : avatarSize,
           zIndex: 60,
         }}
         className="pointer-events-none"
       >
-        {/* Halo borrado no fundo (some conforme encolhe) */}
-        <motion.div
-          style={{ opacity: avatarHaloOpacity }}
-          className="absolute -inset-10 rounded-full bg-gradient-to-br from-primary/50 via-secondary/40 to-pink-500/30 blur-3xl"
-        />
+        {/* Halo borrado no fundo (some conforme encolhe) — só desktop */}
+        {!isMobile && (
+          <motion.div
+            style={{ opacity: avatarHaloOpacity }}
+            className="absolute -inset-10 rounded-full bg-gradient-to-br from-primary/50 via-secondary/40 to-pink-500/30 blur-3xl"
+          />
+        )}
 
         {/* Anel cônico rotativo — o "frame" animado */}
         <motion.div
@@ -282,7 +295,7 @@ function Portfolio() {
       </AnimatePresence>
 
       {/* Hero Section */}
-      <section id="home" className="relative h-screen flex items-center justify-center overflow-hidden pt-20">
+      <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden pt-24 pb-10">
         
         {/* Floating Code Icons */}
         <FloatingItem className="top-[25%] right-[10%] text-primary/20" delay={1}>
@@ -303,21 +316,21 @@ function Portfolio() {
             SaaS & AI Specialist
           </motion.div>
           
-          <motion.h1 
+          <motion.h1
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="text-5xl md:text-8xl font-display font-black tracking-tighter mb-8 leading-[0.9]"
+            className="text-4xl sm:text-6xl md:text-8xl font-display font-black tracking-tighter mb-6 md:mb-8 leading-[0.9] break-words"
           >
             EZEQUIEL <br />
             <span className="text-gradient">RODRIGUES</span>
           </motion.h1>
 
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className="text-lg md:text-2xl font-medium text-white/60 mb-12 h-8 font-display uppercase tracking-widest"
+            className="text-sm sm:text-lg md:text-2xl font-medium text-white/60 mb-10 md:mb-12 h-8 font-display uppercase tracking-widest"
           >
             <Typewriter
               words={['SaaS Systems Developer', 'AI Agent Architect', 'Automation Specialist', 'IT Technician']}
@@ -336,18 +349,18 @@ function Portfolio() {
             transition={{ delay: 0.6 }}
             className="flex flex-wrap justify-center gap-6"
           >
-            <a 
+            <a
               href="#projects"
-              className="px-10 py-5 bg-gradient-to-r from-primary to-secondary text-white rounded-2xl font-display font-black uppercase tracking-widest transition-all hover:scale-105 hover:brightness-110 shadow-2xl shadow-primary/40 flex items-center gap-3 group"
+              className="px-6 sm:px-10 py-4 sm:py-5 text-sm sm:text-base bg-gradient-to-r from-primary to-secondary text-white rounded-2xl font-display font-black uppercase tracking-widest transition-all hover:scale-105 hover:brightness-110 shadow-2xl shadow-primary/40 flex items-center gap-3 group"
             >
               Projetos
               <ChevronRight className="group-hover:translate-x-2 transition-transform" />
             </a>
-            <a 
+            <a
               href={SOCIAL_LINKS.GITHUB}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-10 py-5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl font-display font-black uppercase tracking-widest transition-all flex items-center gap-3 backdrop-blur-md"
+              className="px-6 sm:px-10 py-4 sm:py-5 text-sm sm:text-base bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl font-display font-black uppercase tracking-widest transition-all flex items-center gap-3 backdrop-blur-md"
             >
               <Github size={20} />
               GitHub
@@ -357,8 +370,8 @@ function Portfolio() {
       </section>
 
       {/* About Section - Redesigned with Tabs for Skills */}
-      <Section id="about" className="py-32">
-        <div className="grid lg:grid-cols-2 gap-20 items-start">
+      <Section id="about" className="py-20 md:py-32">
+        <div className="grid lg:grid-cols-2 gap-10 lg:gap-20 items-start">
           <div className="relative group">
             <div className="absolute -inset-4 bg-gradient-to-r from-primary to-secondary rounded-[2.5rem] blur-2xl opacity-20 group-hover:opacity-40 transition-opacity" />
             <div className="relative aspect-[4/5] rounded-[2rem] overflow-hidden glass border-white/20">
@@ -390,16 +403,16 @@ function Portfolio() {
           </div>
           
           <div>
-            <h2 className="text-4xl md:text-6xl font-display font-black mb-8 uppercase tracking-tighter">SOBRE <span className="text-primary">MIM</span></h2>
-            
+            <h2 className="text-3xl sm:text-4xl md:text-6xl font-display font-black mb-6 md:mb-8 uppercase tracking-tighter">SOBRE <span className="text-primary">MIM</span></h2>
+
             {/* Tabs Header */}
-            <div className="flex gap-1 p-1 bg-white/5 rounded-2xl border border-white/10 mb-10 w-fit">
+            <div className="flex gap-1 p-1 bg-white/5 rounded-2xl border border-white/10 mb-8 md:mb-10 overflow-x-auto">
               {['informacao', 'qualificacoes', 'habilidades'].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
                   className={cn(
-                    "px-6 py-3 rounded-xl text-xs font-display font-bold uppercase tracking-widest transition-all",
+                    "px-3 sm:px-6 py-2 sm:py-3 rounded-xl text-[10px] sm:text-xs font-display font-bold uppercase tracking-widest transition-all whitespace-nowrap",
                     activeTab === tab ? "bg-primary text-white shadow-lg" : "text-white/40 hover:text-white/80"
                   )}
                 >
@@ -507,10 +520,10 @@ function Portfolio() {
       </Section>
 
       {/* Projects Section - Futuristic Cards */}
-      <Section id="projects" className="py-32">
-        <div className="text-center mb-20">
-          <h2 className="text-4xl md:text-6xl font-display font-black mb-6 uppercase tracking-tighter">PROJETOS <span className="text-primary">SaaS</span></h2>
-          <p className="text-white/40 max-w-2xl mx-auto font-display uppercase tracking-[0.2em] text-sm">
+      <Section id="projects" className="py-20 md:py-32">
+        <div className="text-center mb-14 md:mb-20">
+          <h2 className="text-3xl sm:text-4xl md:text-6xl font-display font-black mb-6 uppercase tracking-tighter">PROJETOS <span className="text-primary">SaaS</span></h2>
+          <p className="text-white/40 max-w-2xl mx-auto font-display uppercase tracking-[0.2em] text-xs sm:text-sm">
             Explorando as fronteiras do desenvolvimento de software e inteligência artificial.
           </p>
           {projectsSource === 'github' && (
@@ -521,7 +534,7 @@ function Portfolio() {
           )}
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
           {projects.map((project, idx) => (
             <Tilt key={project.title} tiltMaxAngleX={10} tiltMaxAngleY={10} perspective={1000} scale={1.02} transitionSpeed={1000}>
               <motion.div
@@ -549,9 +562,9 @@ function Portfolio() {
                     </div>
                   </div>
                 </div>
-                <div className="p-10">
-                  <h3 className="text-2xl font-display font-black mb-4 uppercase tracking-tight group-hover:text-primary transition-colors">{project.title}</h3>
-                  <div className="relative mb-8">
+                <div className="p-6 md:p-10">
+                  <h3 className="text-xl md:text-2xl font-display font-black mb-4 uppercase tracking-tight group-hover:text-primary transition-colors">{project.title}</h3>
+                  <div className="relative mb-6 md:mb-8">
                     <p className="text-white/50 text-sm leading-relaxed line-clamp-4">
                       {project.preview}
                     </p>
@@ -601,20 +614,20 @@ function Portfolio() {
       </Section>
 
       {/* Experience Section - Futuristic Timeline */}
-      <Section id="experience" className="py-32 relative">
+      <Section id="experience" className="py-20 md:py-32 relative">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-full bg-gradient-to-b from-primary via-secondary to-transparent opacity-20 hidden md:block" />
-        
-        <h2 className="text-4xl md:text-6xl font-display font-black mb-24 text-center uppercase tracking-tighter">CARREIRA <span className="text-secondary">TECH</span></h2>
-        
-        <div className="space-y-24 max-w-5xl mx-auto">
+
+        <h2 className="text-3xl sm:text-4xl md:text-6xl font-display font-black mb-14 md:mb-24 text-center uppercase tracking-tighter">CARREIRA <span className="text-secondary">TECH</span></h2>
+
+        <div className="space-y-14 md:space-y-24 max-w-5xl mx-auto">
           {/* New Experience */}
-          <div className="relative grid md:grid-cols-2 gap-10 items-center">
+          <div className="relative grid md:grid-cols-2 gap-6 md:gap-10 items-center">
             <div className="md:text-right">
               <div className="text-primary font-display font-black text-xl mb-2 uppercase tracking-widest">2025 - ATUAL</div>
               <h3 className="text-3xl font-display font-black uppercase mb-2">Desenvolvedor SaaS</h3>
               <p className="text-white/40 font-display font-bold uppercase tracking-widest text-sm">Empresa de Tecnologia & Software</p>
             </div>
-            <div className="glass p-8 rounded-3xl border-primary/30 relative">
+            <div className="glass p-6 md:p-8 rounded-3xl border-primary/30 relative">
               <div className="absolute -left-[49px] top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-primary glow-primary hidden md:block" />
               <ul className="space-y-4 text-white/70">
                 <li className="flex gap-3 items-start">
@@ -634,13 +647,13 @@ function Portfolio() {
           </div>
 
           {/* Previous Experience */}
-          <div className="relative grid md:grid-cols-2 gap-10 items-center">
+          <div className="relative grid md:grid-cols-2 gap-6 md:gap-10 items-center">
             <div className="md:order-2">
               <div className="text-secondary font-display font-black text-xl mb-2 uppercase tracking-widest">2023 - 2025</div>
               <h3 className="text-3xl font-display font-black uppercase mb-2">Técnico em Eletrônicos</h3>
               <p className="text-white/40 font-display font-bold uppercase tracking-widest text-sm">Suporte & Manutenção</p>
             </div>
-            <div className="glass p-8 rounded-3xl border-secondary/30 relative md:order-1">
+            <div className="glass p-6 md:p-8 rounded-3xl border-secondary/30 relative md:order-1">
               <div className="absolute -right-[49px] top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-secondary hidden md:block" />
               <ul className="space-y-4 text-white/70">
                 <li className="flex gap-3 items-start">
@@ -658,34 +671,34 @@ function Portfolio() {
       </Section>
 
       {/* Contact Section */}
-      <Section id="contact" className="py-32">
-        <div className="relative glass rounded-[4rem] overflow-hidden border-white/10">
+      <Section id="contact" className="py-20 md:py-32">
+        <div className="relative glass rounded-[2rem] md:rounded-[4rem] overflow-hidden border-white/10">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-secondary/10" />
-          <div className="relative p-12 md:p-16 lg:p-24 max-w-3xl mx-auto text-center">
-            <h2 className="text-5xl md:text-7xl font-display font-black mb-8 uppercase tracking-tighter leading-none">
+          <div className="relative p-8 sm:p-12 md:p-16 lg:p-24 max-w-3xl mx-auto text-center">
+            <h2 className="text-4xl sm:text-5xl md:text-7xl font-display font-black mb-6 md:mb-8 uppercase tracking-tighter leading-none">
               VAMOS <br /><span className="text-primary">CONECTAR?</span>
             </h2>
-            <p className="text-white/40 text-lg mb-16 font-display uppercase tracking-widest">
+            <p className="text-white/40 text-sm sm:text-base md:text-lg mb-10 md:mb-16 font-display uppercase tracking-widest">
               Pronto para construir o próximo grande SaaS ou integrar IA ao seu negócio.
             </p>
 
-            <div className="space-y-6 mb-16">
-              <a href={SOCIAL_LINKS.EMAIL} className="flex items-center gap-6 group p-4 rounded-2xl hover:bg-white/5 transition-all">
-                <div className="w-16 h-16 rounded-2xl glass flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all glow-primary shrink-0">
-                  <Mail size={28} />
+            <div className="space-y-4 md:space-y-6 mb-10 md:mb-16">
+              <a href={SOCIAL_LINKS.EMAIL} className="flex items-center gap-4 md:gap-6 group p-3 md:p-4 rounded-2xl hover:bg-white/5 transition-all">
+                <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl glass flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all glow-primary shrink-0">
+                  <Mail className="w-5 h-5 md:w-7 md:h-7" />
                 </div>
-                <div className="text-left min-w-0">
-                  <div className="text-xs font-display font-bold text-white/30 uppercase tracking-[0.3em] mb-1">E-mail</div>
-                  <div className="text-lg md:text-xl font-display font-bold uppercase tracking-tight truncate">ezequielrod2020@gmail.com</div>
+                <div className="text-left min-w-0 flex-1">
+                  <div className="text-[10px] md:text-xs font-display font-bold text-white/30 uppercase tracking-[0.3em] mb-1">E-mail</div>
+                  <div className="text-sm md:text-xl font-display font-bold uppercase tracking-tight truncate">ezequielrod2020@gmail.com</div>
                 </div>
               </a>
-              <a href={SOCIAL_LINKS.WHATSAPP} className="flex items-center gap-6 group p-4 rounded-2xl hover:bg-white/5 transition-all">
-                <div className="w-16 h-16 rounded-2xl glass flex items-center justify-center text-secondary group-hover:bg-secondary group-hover:text-white transition-all shrink-0">
-                  <Phone size={28} />
+              <a href={SOCIAL_LINKS.WHATSAPP} className="flex items-center gap-4 md:gap-6 group p-3 md:p-4 rounded-2xl hover:bg-white/5 transition-all">
+                <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl glass flex items-center justify-center text-secondary group-hover:bg-secondary group-hover:text-white transition-all shrink-0">
+                  <Phone className="w-5 h-5 md:w-7 md:h-7" />
                 </div>
-                <div className="text-left">
-                  <div className="text-xs font-display font-bold text-white/30 uppercase tracking-[0.3em] mb-1">WhatsApp</div>
-                  <div className="text-lg md:text-xl font-display font-bold uppercase tracking-tight">+55 (64) 99207-0004</div>
+                <div className="text-left min-w-0 flex-1">
+                  <div className="text-[10px] md:text-xs font-display font-bold text-white/30 uppercase tracking-[0.3em] mb-1">WhatsApp</div>
+                  <div className="text-sm md:text-xl font-display font-bold uppercase tracking-tight">+55 (64) 99207-0004</div>
                 </div>
               </a>
             </div>

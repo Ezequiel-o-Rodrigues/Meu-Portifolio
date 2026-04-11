@@ -141,8 +141,7 @@ export async function fetchPortfolioRepos(
       (a, b) =>
         b.stargazers_count - a.stargazers_count ||
         b.pushed_at.localeCompare(a.pushed_at),
-    )
-    .slice(0, 6);
+    );
 
   const readmes = await Promise.all(
     filtered.map((r) => fetchReadme(username, r.name)),
